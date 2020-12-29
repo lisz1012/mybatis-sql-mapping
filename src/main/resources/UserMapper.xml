@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lisz.dao.UserDao">
+    <!--在mybatis中，会包含非常多的查询操作，因此查询的参数比较麻烦
+   id:用来设置当前sql语句匹配的dao接口的方法，必须要跟方法的名字统一
+   resultType:表示返回的结果的类型,一般使用的并不多，此类型只能返回单一的对象，而我们在查询的时候特别是关联查询的时候，需要自定义结果集
+          当返回的结果是一个集合的时候，并不需要resultmap，只需要使用resultType指定集合中的元素类型即可
+   resultMap:当进行关联查询的时候，在返回结果的对象中还包含另一个对象的引用时，此时需要自定义结果集合，使用resultmap
+    resultType 和 resultMap 之间只能同时使用一个
+   -->
+    <!--参数的获取值的方式：
+    每次在向sql语句中设置结果值的时候，可以使用#{}，还可以使用${}这样的方式，那么哪种比较好？
+        #{}：select * from emp where empno = ?
+        ${}: select * from emp where empno = 7369
+        通过sql语句可以得出结论：
+            #{}的处理方式是使用了参数预编译的方式，不会引起sql注入的问题
+            ${}的处理方式是直接拼接sql语句，得到对应的sql语句，会有sql注入的危险
+            因此，我们推荐大家使用#{}的方式
+            但是要注意，${}也是有自己的使用场景的:
+                当需要传入动态的表名，列名的时候就需要使用${},就是最直接的拼接字符串的行为
+                在xml中的SQL语句要这样接受参数：${arg0}, ${arg1}...
+    -->
+    <!--当查询语句中包含多个参数的时候，我们应该如何获取需要的参数，这里所说的参数就是Dao接口方法中的那个（些）参数
+    1、如果是单个参数
+        基本数据类型：那么可以使用#{}随便获取
+        引用数据类型:使用#{}获取值的是必须要使用对象的属性名
+    2、如果是多个参数：
+        我们在获取参数值的时候，就不能简单的通过#{}来获取了,只能通过arg0,arg1,param1,param2...这样的方式来获取参数的值
+        原因在于，mybatis在传入多个参数的时候，会讲这些参数的结果封装到map结构中，在map中key值就是(arg0,arg1,...)
+        (param1,param2...),这种方式非常不友好，没有办法根据属性名来获取具体的参数值
+        如果想要使用参数的话，可以进行如下的设置：
+        public List<Emp> selectEmpByEmpnoAndSal2(@Param("empno") Integer empno, @Param("sal") Double sal);
+            这样的方式其实是根据@Param来进行参数的获取.
+    3、自定义map结构
+    -->
+    <!-- select标签中id的名字跟Dao中对应的方法名字一致，在mybatis-config.xml中设置了Alias别名，所以可以不写包名，直接写类名：User -->
+    <select id="findUserById" resultType="com.lisz.bean.User">
+      select * from user where id = #{id}
+    </select>
+
+    <select id="selectUsersByScore" resultType="com.lisz.bean.User">
+      select * from user where score > #{score}
+    </select>
+    <!-- 这里的参数被@Param注解了 -->
+    <select id="selectUsersByScoreAndId1" resultType="com.lisz.bean.User">
+      select * from user where id = #{id} and score > #{score}
+    </select>
+    <!-- 这里的参数没有被@Param注解 -->
+    <select id="selectUsersByScoreAndId2" resultType="com.lisz.bean.User">
+      select * from user where id = #{arg0} and score > #{arg1}
+    </select>
+    <!-- 这里的参数是一个Map -->
+    <select id="selectUsersByScoreAndId3" resultType="com.lisz.bean.User">
+      select * from user where id = #{id} and score > #{score}
+    </select>
+    <!-- 会判断数据库标识，下面是MySQL就用前面的，是Oracle就用着一个，一般不改 -->
+<!--    <select id="findById" resultType="User" databaseId="oracle">-->
+<!--      select * from user where id = #{id}-->
+<!--    </select>-->
+
+    <select id="selectAll" resultType="User">
+        select * from user
+    </select>
+    <!--当需要返回的结果是一个map的集合的时候，同时map中包含多个对象，那么此时必须要在dao的方法上添加@MapKey("id")注解，来标识到底是哪一个属性(这里是id)值作为key-->
+    <select id="selectAll2" resultType="User">
+        select * from user
+    </select>
+    <!--当返回值是map结构的时候，会把查询结构的字段值作为key，结果作为value-->
+    <select id="findById2" resultType="map">
+        select * from user where id = #{id}
+    </select>
+
+    <!-- 一对多关联查询，一个人有多条狗 -->
+    <resultMap id="myUser" type="com.lisz.bean.User">
+        <id property="id" column="id" />
+        <result property="name" column="name" />
+        <result property="job" column="job" />
+        <result property="birthDate" column="birth_date" />
+        <result property="profile" column="profile" />
+        <result property="email" column="email" />
+        <result property="score" column="score" />
+        <result property="createdAt" column="created_at" />
+        <result property="modifiedAt" column="modified_at" />
+        <result property="version" column="version" />
+        <collection property="dogs" ofType="com.lisz.bean.Dog" >
+            <id property="id" column="id" />
+            <result property="name" column="dname" />
+            <result property="gender" column="dgender" />
+            <result property="age" column="dage" />
+            <!-- 这里就不要再写User的association了，否则没完了 -->
+        </collection>
+    </resultMap>
+    <select id="getUserByIdWithDogs" resultType="com.lisz.bean.User" resultMap="myUser">
+        select user.*,
+               dog.id,
+               dname,
+               dgender,
+               dage,
+               user_id
+               from user left join dog
+               on user.id = dog.user_id
+               where user.id = #{id}
+    </select>
+
+    <!--insert delete update分别用来标识不同类型的sql语句
+   id:用来标识跟dao接口中匹配的方法，必须与方法的名字一一对应上
+   flushCache：用来标识当前sql语句的结果是否进入二级缓存
+   statementType：用来选择执行sql语句的方式
+           STATEMENT：最基本的jdbc的操作，用来表示一个sql语句，不能防止sql注入
+           PREPARED: preareStatement：采用预编译的方式，能够防止sql注入，设置参数的时候需要该对象来进行设置
+           CALLABLE：调用存储过程（基本不用存储过程了）
+   useGeneratedKeys：当完成插入操作的时候，可以将自增生成的主键值返回到具体被保存的对象中的某个字段中，由下面的keyProperty指定
+          keyProperty：指定返回的主键要赋值到哪个属性中，一般跟useGeneratedKeys成对出现
+           注意⚠️：在编写sql语句的过程中，无论你是否配置了驼峰标识的识别setting，都需要在sql语句中写具体的表的属性名，不能写对象名称
+   -->
+    <insert id="save" useGeneratedKeys="true" keyProperty="id">
+        insert into user (name, job, birth_date, email, score, created_at, modified_at, version)
+        values (#{name}, #{job}, #{birthDate}, #{email}, #{score}, #{createdAt}, #{modifiedAt}, 0)
+    </insert>
+    <update id="update">
+        update user set score = #{score}, version = version + 1 where id = #{id}
+    </update>
+    <delete id="deleteById">
+        delete from user where id = #{id}
+    </delete>
+    <!--===============================================================================-->
+    <!--如果需要定义一个自定义结果集，那么该如何进行处理？用resultMap-->
+</mapper>

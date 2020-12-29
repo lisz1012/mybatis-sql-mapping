@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--在使用mybatis的时候，有些情况下需要我们封装结果集，一般情况下mybatis会帮我们自动封装（字段名跟属性值必须一一对应），但是如果字段的值和类中的值
+    不匹配的时候，怎么处理？
+        1、可以在sql语句中添加别名字段，来保证赋值成功，但是太麻烦了，而且不可重用
+        2、resultMap：
+    -->
+<mapper namespace="com.lisz.dao.DogDao">
+    <!--自定义结果集
+    id:表示当前结果集的唯一标识
+    type:表示当前结果集的类型
+    -->
+    <resultMap id="myDog" type="com.lisz.bean.Dog">
+        <!--
+       id:表示指定对应的主键。主键最好跟业务无关，就是一个独立的值，自然主键和代理主键，推荐使用代理主键
+          这样的好处是：避免业务耦合。MySQL集群的话是不能使用使用自增的id的，要用雪花算法生成id
+       property:实体类中对应的属性值
+       column：表中字段的名称
+       -->
+        <id property="id" column="id" /><!--主键的property和column是一样的，所以可以不写，但是最好写上-->
+        <!--除主键外的其他字段映射-->
+        <result property="name" column="dname" />
+        <result property="gender" column="dgender" />
+        <result property="age" column="dage" />
+        <association property="user" javaType="User" > <!-- column="user_id" 和 select="findById" 可以不写 -->
+            <id property="id" column="id" />
+            <result property="name" column="name" />
+            <result property="job" column="job" />
+            <result property="birthDate" column="birth_date" />
+            <result property="profile" column="profile" />
+            <result property="email" column="email" />
+            <result property="score" column="score" />
+            <result property="createdAt" column="created_at" />
+            <result property="modifiedAt" column="modified_at" />
+            <result property="version" column="version" />
+        </association>
+    </resultMap>
+    <!--还可以把各层级压扁。将每一个属性值都映射成对象中的数据，如果有实体类对象，就写成对象.属性的方式。但是不太专业-->
+    <!--    <resultMap id="myEmp" type="com.mashibing.bean.Emp">-->
+    <!--        <id column="empno" property="empno"></id>-->
+    <!--        <result column="ename" property="ename"></result>-->
+    <!--        <result column="job" property="job"></result>-->
+    <!--        <result column="mgr" property="mgr"></result>-->
+    <!--        <result column="hiredate" property="hiredate"></result>-->
+    <!--        <result column="sal" property="sal"></result>-->
+    <!--        <result column="comm" property="comm"></result>-->
+    <!--        <result column="deptno" property="dept.deptno"></result>-->
+    <!--        <result column="dname" property="dept.dname"></result>-->
+    <!--        <result column="loc" property="dept.loc"></result>-->
+    <!--    </resultMap>-->
+
+    <select id="findById" resultMap="myDog">
+      select dog.id,
+             dog.dname,
+             dog.dgender,
+             dog.dage,
+             user.id,
+             user.name,
+             user.job,
+             user.birth_date,
+             user.profile,
+             user.email,
+             user.score,
+             user.created_at,
+             user.modified_at,
+             user.version
+             from dog left join user on dog.user_id = user.id where dog.id = #{id}
+    </select>
+
+</mapper>
