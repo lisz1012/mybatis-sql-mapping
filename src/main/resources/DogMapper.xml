@@ -69,4 +69,54 @@
              from dog left join user on dog.user_id = user.id where dog.id = #{id}
     </select>
 
+    <select id="findByIdTwoSteps" resultMap="twoStepSelectById">
+        select * from dog where id = #{id}
+    </select>
+    <resultMap id="twoStepSelectById" type="com.lisz.bean.Dog">
+        <id property="id" column="id" /><!--主键的property和column是一样的，所以可以不写，但是最好写上-->
+        <!--除主键外的其他字段映射-->
+        <result property="name" column="dname" />
+        <result property="gender" column="dgender" />
+        <result property="age" column="dage" />
+        <association property="user" select="com.lisz.dao.UserDao.findUserById" column="id"> <!-- column="user_id" 和 select="findById" 可以不写 -->
+
+        </association>
+    </resultMap>
+
+
+
+    <resultMap id="myDog2" type="com.lisz.bean.Dog">
+        <!--
+       id:表示指定对应的主键。主键最好跟业务无关，就是一个独立的值，自然主键和代理主键，推荐使用代理主键
+          这样的好处是：避免业务耦合。MySQL集群的话是不能使用使用自增的id的，要用雪花算法生成id
+       property:实体类中对应的属性值
+       column：表中字段的名称
+       -->
+        <id property="id" column="id" /><!--主键的property和column是一样的，所以可以不写，但是最好写上-->
+        <!--除主键外的其他字段映射-->
+        <result property="name" column="dname" />
+        <result property="gender" column="dgender" />
+        <result property="age" column="dage" />
+    </resultMap>
+    <select id="findDogsByUserId" resultMap="myDog2">
+        select * from dog where user_id = #{user_id}
+    </select>
+
+
+    <!--========================= 动态SQL ==========================================-->
+    <!--
+    foreach:遍历集合中的元素
+        collection:指定要遍历的集合
+        separator:分隔符
+        open:以什么开始
+        close：以什么结束
+        item:遍历过程中的每一个元素值
+        index:表示索引
+    -->
+    <select id="findDogsByUserIds" resultMap="myDog">
+        select * from dog where user_id in
+        <foreach collection="user_ids" separator="," open="(" item="id" index="index" close=")"> <!-- user_ids跟@Param的参数一致 -->
+            #{id} <!-- 这个id指的是上一行的id -->
+        </foreach>
+    </select>
 </mapper>

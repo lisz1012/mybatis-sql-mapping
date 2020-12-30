@@ -23,4 +23,6 @@ public interface UserDao {
 	public List<User> selectUsersByScoreAndId3(Map<String, Object> map);
 
 	public User getUserByIdWithDogs(@Param("id") Integer id);
+	public User getUserByIdWithDogsTwoSteps(@Param("id") Integer id);
+	public User getUserByCondition(User user);
 }

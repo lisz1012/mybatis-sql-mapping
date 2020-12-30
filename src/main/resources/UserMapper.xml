@@ -127,4 +127,81 @@
     </delete>
     <!--===============================================================================-->
     <!--如果需要定义一个自定义结果集，那么该如何进行处理？用resultMap-->
+
+
+
+    <resultMap id="myUserTwoSteps" type="com.lisz.bean.User">
+        <id property="id" column="id" />
+        <result property="name" column="name" />
+        <result property="job" column="job" />
+        <result property="birthDate" column="birth_date" />
+        <result property="profile" column="profile" />
+        <result property="email" column="email" />
+        <result property="score" column="score" />
+        <result property="createdAt" column="created_at" />
+        <result property="modifiedAt" column="modified_at" />
+        <result property="version" column="version" />
+        <collection property="dogs" ofType="com.lisz.bean.Dog" select="com.lisz.dao.DogDao.findDogsByUserId" column="id" fetchType="lazy"/>
+    </resultMap>
+    <select id="getUserByIdWithDogsTwoSteps" resultMap="myUserTwoSteps">
+        select * from user where id = #{id}
+    </select>
+
+    <sql id="mysql">
+        select * from user;
+    </sql>
+
+
+    <!--========================= 动态SQL ==========================================-->
+<!--    <select id="getUserByCondition" resultType="com.lisz.bean.User">-->
+<!--        select * from user-->
+<!--        <where>-->
+<!--            <if test="id != null">-->
+<!--                id = #{id}-->
+<!--            </if>-->
+<!--            &lt;!&ndash; and 必须写在最前面 &ndash;&gt;-->
+<!--            <if test="email != null">-->
+<!--                and email = #{email}-->
+<!--            </if>-->
+<!--        </where>-->
+<!--    </select>-->
+
+    <!-- choose标签相当于java里的switch -->
+<!--    <select id="getUserByCondition" resultType="com.lisz.bean.User">-->
+<!--        select * from user-->
+<!--        <where>-->
+<!--            <choose>-->
+<!--                <when test="id != null">-->
+<!--                    id = #{id}-->
+<!--                </when>-->
+<!--                <when test="email != null">-->
+<!--                    and email = #{email}-->
+<!--                </when>-->
+<!--                <when test="name != null">-->
+<!--                    and name = #{name}-->
+<!--                </when>-->
+<!--                <otherwise>-->
+<!--                    and 1 = 1-->
+<!--                </otherwise>-->
+<!--            </choose>-->
+<!--        </where>-->
+<!--    </select>-->
+
+    <!--
+       trim:截取字符串，可以自定义where的格式
+       prefix：为sql语句整体添加一个前缀
+       prefixOverrides:去除整体sql语句前面多余的字符串
+       suffixOverriede:去除整体sql语句后面多余的字符串
+       -->
+    <select id="getUserByCondition" resultType="com.lisz.bean.User">
+        select * from user
+        <trim prefix="WHERE" prefixOverrides="and" suffixOverrides="and|or">
+            <if test="id != null">
+                and id = #{id} and
+            </if>
+            <if test="email != null">
+                email = #{email} or
+            </if>
+        </trim>
+    </select>
 </mapper>
