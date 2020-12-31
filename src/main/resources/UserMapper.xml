@@ -204,4 +204,8 @@
             </if>
         </trim>
     </select>
+
+    <update id="updateWithUser">
+        update user set name = #{name} where id = #{id}
+    </update>
 </mapper>

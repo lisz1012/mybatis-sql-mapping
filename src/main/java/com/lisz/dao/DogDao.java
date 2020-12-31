@@ -11,4 +11,5 @@ public interface DogDao {
 	public Dog findByIdTwoSteps(@Param("id") Integer id);
 	public List<Dog> findDogsByUserId(@Param("user_id") Integer userId);
 	public List<Dog> findDogsByUserIds(@Param("user_ids") List<Integer> userIds);
+	Integer updateWithDog(Dog dog);
 }
